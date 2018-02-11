@@ -1,3 +1,6 @@
+// A program for extracting the form fields from a XFA/AcroForm PDF form.
+// Maël Valais, 2018
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -55,11 +58,10 @@ void strip(char* str, char* str_stripped, char* token) {
     str_stripped[i_stripped]='\0'; // terminate the string properly
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     char help[] =
     "Get the form field contents from a PDF. It uses poppler. The output looks\n"
-    "like PDFtk's dump_data_fields_utf8.\n"
+    "like PDFtk's dump_data_fields_utf8. Supports AcroForm & XfaForm PDF forms.\n"
     "\n"
     "Usage:\n"
     "  read_form_fields (<file> | -)\n"
@@ -68,8 +70,20 @@ int main(int argc, char **argv)
     "Options:\n"
     "  <file> is the name of the file\n"
     "  -h --help       Show this screen.\n"
+    "\n"
     "Details of output:\n"
-    "  Only 'text' fields have their value displayed.\n";
+    "  Each line consists of one of:\n"
+    "  - A separator '---' that separate two fields\n"
+    "  - FieldType: Choice | Button | Text | Signature | Unknown \n"
+    "  - FieldName: <text> (only with Text, Choice, Button)\n"
+    "  - FieldMaxLength: <integer> (only with Text)"
+    "  - FieldStateOption: <text> (for Text & Choice) | Off | Yes (Button)\n"
+    "\n"
+    "  Some field labels aren't supported: FieldValueDefault, FieldNameAlt,\n"
+    "  FieldFlags, FieldJustification. They aren't in the Poppler Glib API.\n"
+    "  NB: sometimes the unicode point 'U+FEFF which corresponds to\n"
+    "  the BOM was showing in the field values and names. So I strip 'U+FEFF'\n"
+    "  from values/names before printing.\n";
 
     char f_name[256] = "";
     char *arg;
@@ -120,11 +134,11 @@ int main(int argc, char **argv)
 
             printf("FieldType: ");
             switch(type) {
-                case POPPLER_FORM_FIELD_UNKNOWN: printf("unkonwn"); break;
-                case POPPLER_FORM_FIELD_BUTTON: printf("button"); break;
-                case POPPLER_FORM_FIELD_TEXT: printf("text"); break;
-                case POPPLER_FORM_FIELD_CHOICE: printf("choice"); break;
-                case POPPLER_FORM_FIELD_SIGNATURE: printf("signature"); break;
+                case POPPLER_FORM_FIELD_UNKNOWN: printf("Unkonwn"); break;
+                case POPPLER_FORM_FIELD_BUTTON: printf("Button"); break;
+                case POPPLER_FORM_FIELD_TEXT: printf("Text"); break;
+                case POPPLER_FORM_FIELD_CHOICE: printf("Choice"); break;
+                case POPPLER_FORM_FIELD_SIGNATURE: printf("Signature"); break;
             }
             printf("\n");
 
@@ -142,14 +156,26 @@ int main(int argc, char **argv)
                 gchar* txt = poppler_form_field_text_get_text(f->field);
                 if (txt != NULL) {
                     strip(txt,txt,"\uFEFF");
-                    printf("FieldValue: %s", txt);
+                    printf("FieldValue: %s\n", txt);
                 } else {
-                    printf("FieldValue:");
+                    printf("FieldValue:\n");
                 }
-            } else {
-                printf("FieldValue:");
+                printf("FieldMaxLength: %d\n", poppler_form_field_text_get_max_len(f->field));
             }
-            printf("\n");
+
+            if (type == POPPLER_FORM_FIELD_CHOICE) {
+                for (int i = 0; i<poppler_form_field_choice_get_n_items(f->field); i++) {
+                    char *txt = poppler_form_field_choice_get_item(f->field, i);
+                    if (txt) {
+                        strip(txt,txt,"\uFEFF");
+                        printf("FieldStateOption: %s\n", txt);
+                    }
+                }
+            }
+            if (type == POPPLER_FORM_FIELD_BUTTON) {
+                printf("FieldValue: %s\n", poppler_form_field_button_get_state(f->field) ? "Yes" : "Off");
+                printf("FieldStateOption: Off\nFieldStateOption: Yes\n");
+            }
             count++;
         }
     }
