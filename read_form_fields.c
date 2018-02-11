@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
-#include <stdlib.h>
+#include <stdlib.h> // for exit()
 #include <string.h>
 #include <poppler.h>
 
@@ -89,6 +89,7 @@ int main(int argc, char **argv) {
     "     values/names before printing.\n";
 
     char f_name[256] = "";
+    GFile *f_fd;
     char *arg;
 
     for (int i = 1; i < argc; i++) {
@@ -105,22 +106,15 @@ int main(int argc, char **argv) {
     }
     if (strlen(f_name) == 0) {
         fprintf(stderr,"usage: you must give a file name (or - for stdin)\n");
-        exit(124);
+        return 124;
     }
 
     GError *error = NULL;
-    gchar *uri;
     PopplerDocument *document;
 
-    uri = g_filename_to_uri (f_name, NULL, &error);
-    if (uri == NULL) {
-        printf("error: poppler fail opening '%s': %s\n", f_name, error->message);
-        return 1;
-    }
-    if (DEBUG) printf("uri: %s\n", uri);
-    document = poppler_document_new_from_file (uri, NULL, &error);
+    document = poppler_document_new_from_gfile (g_file_new_for_commandline_arg(f_name), NULL, NULL, &error);
     if (document == NULL) {
-        printf("error: poppler fail: %s\n", error->message);
+        printf("error: poppler could not open '%s': %s\n", f_name, error->message);
         return 2;
     }
 
