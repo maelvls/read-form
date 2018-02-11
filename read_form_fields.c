@@ -71,19 +71,22 @@ int main(int argc, char **argv) {
     "  <file> is the name of the file\n"
     "  -h --help       Show this screen.\n"
     "\n"
-    "Details of output:\n"
-    "  Each line consists of one of:\n"
+    "Details on output:\n"
+    "  The output resembles PDFtk's. Each line consists of one of:\n"
     "  - A separator '---' that separate two fields\n"
     "  - FieldType: Choice | Button | Text | Signature | Unknown \n"
     "  - FieldName: <text> (only with Text, Choice, Button)\n"
-    "  - FieldMaxLength: <integer> (only with Text)"
+    "  - FieldMaxLength: <integer> (only with Text)\n"
     "  - FieldStateOption: <text> (for Text & Choice) | Off | Yes (Button)\n"
     "\n"
-    "  Some field labels aren't supported: FieldValueDefault, FieldNameAlt,\n"
-    "  FieldFlags, FieldJustification. They aren't in the Poppler Glib API.\n"
-    "  NB: sometimes the unicode point 'U+FEFF which corresponds to\n"
-    "  the BOM was showing in the field values and names. So I strip 'U+FEFF'\n"
-    "  from values/names before printing.\n";
+    "Notes:\n"
+    "  1) The order of appearance is different from PDFtk's. This program will\n"
+    "     show the fields by order of appearance in each page.\n"
+    "  2) Some field labels aren't supported: FieldValueDefault, FieldNameAlt,\n"
+    "     FieldFlags, FieldJustification. They aren't in the Poppler Glib API.\n"
+    "  3) Sometimes the unicode point 'U+FEFF which corresponds to the BOM was\n"
+    "     showing in the field values and names. So I strip 'U+FEFF' from\n"
+    "     values/names before printing.\n";
 
     char f_name[256] = "";
     char *arg;
@@ -105,7 +108,7 @@ int main(int argc, char **argv) {
         exit(124);
     }
 
-    GError *error=NULL;
+    GError *error = NULL;
     gchar *uri;
     PopplerDocument *document;
 
