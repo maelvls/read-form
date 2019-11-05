@@ -1,6 +1,10 @@
 # Dump the form values from a PDF
 
+A small tool for fetching form content from a PDF.
+
 ```sh
+$ brew install poppler
+$ make
 $ ./read_form_fields form.pdf
 FieldType: Choice
 FieldName: Favourite Colour List Box
