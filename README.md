@@ -3,8 +3,37 @@
 A small tool for fetching form content from a PDF.
 
 ```sh
-$ brew install poppler
-$ make
+% ./read_form_fields --help
+Get the form field contents from a PDF. It uses poppler. The output looks
+like PDFtk's dump_data_fields_utf8. Supports AcroForm & XfaForm PDF forms.
+
+Usage:
+  read_form_fields (<file> | -)
+  read_form_fields --help
+
+Options:
+  <file> is the name of the file
+  -h --help       Show this screen.
+
+Details on output:
+  The output resembles PDFtk's. Each line consists of one of:
+  - A separator '---' that separate two fields
+  - FieldType: Choice | Button | Text | Signature | Unknown
+  - FieldName: <text> (only with Text, Choice, Button)
+  - FieldMaxLength: <integer> (only with Text)
+  - FieldStateOption: <text> (for Text & Choice) | Off | Yes (Button)
+
+Notes:
+  1) The order of appearance is different from PDFtk's. This program will
+     show the fields by order of appearance in each page.
+  2) Some field labels aren't supported: FieldValueDefault, FieldNameAlt,
+     FieldFlags, FieldJustification. They aren't in the Poppler Glib API.
+  3) Sometimes the unicode point 'U+FEFF which corresponds to the BOM was
+     showing in the field values and names. So I strip 'U+FEFF' from
+     values/names before printing.
+```
+
+```sh
 $ ./read_form_fields form.pdf
 FieldType: Choice
 FieldName: Favourite Colour List Box
@@ -130,4 +159,11 @@ FieldType: Text
 FieldName: Given Name Text Box
 FieldValue: dzadazd
 FieldMaxLength: 40
+```
+
+## Build it
+
+```sh
+brew install poppler
+make
 ```
